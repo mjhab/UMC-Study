@@ -1,39 +1,28 @@
-import { useState } from "react";
-import Header from "./components/header";
-import MovieGrid from "./components/movie-grid";
-import Pagination from "./components/pagination";
-import { movies as initialMovies } from "./data/movies";
-import type { Movie } from "./types/movie";
-import "./App.css";
+
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import MovieListPage from "./pages/movies/movie-list-page";
+import MovieDetailPage from "./pages/movies/movie-detail-page";
+import SearchPage from "./pages/movies/search-page";
 
 function App() {
-  const [movies, setMovies] = useState<Movie[]>(initialMovies);
-
-  const handleToggleBookmark = (movieId: number) => {
-    setMovies((currentMovies) =>
-      currentMovies.map((movie) =>
-        movie.id === movieId
-          ? { ...movie, isBookmarked: !movie.isBookmarked }
-          : movie,
-      ),
-    );
-  };
-
   return (
-    <>
-      <Header />
+    <BrowserRouter>
+      <div style={{ padding: "20px" }}>
+        <h1>UMC 6주차 필수미션</h1>
 
-      <main className="main">
-        <h1 className="page-title">영화</h1>
+        <nav style={{ display: "flex", gap: "20px" }}>
+          <Link to="/">영화 목록</Link>
+          <Link to="/search">영화 검색</Link>
+          <Link to="/movies/550">영화 상세</Link>
+        </nav>
 
-        <MovieGrid
-          movies={movies}
-          onToggleBookmark={handleToggleBookmark}
-        />
-
-        <Pagination />
-      </main>
-    </>
+        <Routes>
+          <Route path="/" element={<MovieListPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/movies/:id" element={<MovieDetailPage />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 
