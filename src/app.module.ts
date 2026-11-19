@@ -1,20 +1,29 @@
-import { RatingController } from './rating.controller';
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { JwtModule } from "@nestjs/jwt";
 
-import { Member } from './member.entity';
-import { Rating } from './rating.entity';
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
 
-import { MemberController } from './member.controller';
-import { MemberService } from './member.service';
+import { Member } from "./member.entity";
+import { Rating } from "./rating.entity";
+import { Favorite } from "./entity/favorite.entity";
 
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { MemberController } from "./member.controller";
+import { MemberService } from "./member.service";
+
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
+
+import { RatingController } from "./rating.controller";
+
+import { FavoriteController } from "./controller/favorite.controller";
+import { FavoriteService } from "./service/favorite.service";
+
+import { MovieRecordController } from "./controller/movie-record.controller";
+import { MovieRecordService } from "./service/movie-record.service";
 
 @Module({
   imports: [
@@ -23,26 +32,32 @@ import { AuthService } from './auth.service';
     }),
 
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
+      type: "mysql",
+      host: "localhost",
       port: 3306,
-      username: 'root',
+      username: "root",
       password: process.env.DB_PASSWORD,
-      database: 'umc_study',
-      entities: [Member, Rating],
+      database: "umc_study",
+      entities: [Member, Rating, Favorite],
       synchronize: false,
     }),
 
-    TypeOrmModule.forFeature([Member, Rating]),
+    TypeOrmModule.forFeature([
+      Member,
+      Rating,
+      Favorite,
+    ]),
 
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.getOrThrow<string>('JWT_SECRET'),
+        secret: configService.getOrThrow<string>("JWT_SECRET"),
         signOptions: {
           expiresIn: Number(
-            configService.get<string>('JWT_ACCESS_EXPIRATION') ?? 3600,
+            configService.get<string>(
+              "JWT_ACCESS_EXPIRATION",
+            ) ?? 3600,
           ),
         },
       }),
@@ -50,16 +65,20 @@ import { AuthService } from './auth.service';
   ],
 
   controllers: [
-  AppController,
-  MemberController,
-  AuthController,
-  RatingController,
-],
+    AppController,
+    MemberController,
+    AuthController,
+    RatingController,
+    FavoriteController,
+    MovieRecordController,
+  ],
 
   providers: [
     AppService,
     MemberService,
     AuthService,
+    FavoriteService,
+    MovieRecordService,
   ],
 })
 export class AppModule {}
