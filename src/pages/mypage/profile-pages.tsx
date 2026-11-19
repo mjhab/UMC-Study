@@ -1,23 +1,60 @@
-
+import FavoritesList from "../../components/movies/favorites-list";
 import { useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
+import { getMe } from "../../api/members/me";
+import { useAuthStore } from "../../stores/auth-store";
+import { useUpdateMeMutation } from "../../hooks/use-update-me-mutation";
 
-export interface Profile {
-  nickname: string;
-  email: string;
-  introduction: string;
-}
+// 실제 서버의 회원 정보 조회
+function useMeQuery() {
+  const accessToken = useAuthStore(
+    (state) => state.accessToken
+  );
 
-interface ProfileProps {
-  profile: Profile;
-}
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
 
-interface EditProfileProps extends ProfileProps {
-  onSave: (profile: Profile) => void;
+  return { accessToken, meQuery };
 }
 
 // 내 정보 조회 화면
-export function MyPage({ profile }: ProfileProps) {
+export function MyPage() {
+  const { accessToken, meQuery } = useMeQuery();
+
+  if (!accessToken) {
+    return (
+      <div style={containerStyle}>
+        <h2>내 정보</h2>
+        <p>로그인이 필요합니다.</p>
+        <Link to="/login">로그인하기</Link>
+      </div>
+    );
+  }
+
+  if (meQuery.isLoading) {
+    return (
+      <div style={containerStyle}>
+        <p>회원 정보를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (meQuery.isError || !meQuery.data) {
+    return (
+      <div style={containerStyle}>
+        <p>회원 정보를 불러오지 못했습니다.</p>
+      </div>
+    );
+  }
+
+  const profile = meQuery.data;
+
   return (
     <div style={containerStyle}>
       <h2>내 정보</h2>
@@ -35,42 +72,93 @@ export function MyPage({ profile }: ProfileProps) {
       </div>
 
       <div style={fieldStyle}>
-        <strong>자기소개</strong>
-        <p>{profile.introduction || "등록된 소개가 없습니다."}</p>
+        <strong>가입일</strong>
+        <p>{new Date(profile.createdAt).toLocaleDateString("ko-KR")}</p>
       </div>
 
       <Link to="/mypage/edit" style={buttonStyle}>
         내 정보 수정
       </Link>
+
+      <div style={{ marginTop: "30px" }}>
+  <h3>❤️ 내 즐겨찾기 영화</h3>
+  <FavoritesList />
+</div>
     </div>
   );
 }
 
 // 내 정보 수정 화면
-export function EditProfilePage({
-  profile,
-  onSave,
-}: EditProfileProps) {
+export function EditProfilePage() {
+  const { accessToken, meQuery } = useMeQuery();
+
+  if (!accessToken) {
+    return (
+      <div style={containerStyle}>
+        <h2>내 정보 수정</h2>
+        <p>로그인이 필요합니다.</p>
+        <Link to="/login">로그인하기</Link>
+      </div>
+    );
+  }
+
+  if (meQuery.isLoading) {
+    return (
+      <div style={containerStyle}>
+        <p>회원 정보를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (meQuery.isError || !meQuery.data) {
+    return (
+      <div style={containerStyle}>
+        <p>회원 정보를 불러오지 못했습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <EditProfileForm
+      initialNickname={meQuery.data.nickname}
+      email={meQuery.data.email}
+    />
+  );
+}
+
+interface EditProfileFormProps {
+  initialNickname: string;
+  email: string;
+}
+
+function EditProfileForm({
+  initialNickname,
+  email,
+}: EditProfileFormProps) {
   const navigate = useNavigate();
-  const [form, setForm] = useState(profile);
+  const [nickname, setNickname] = useState(initialNickname);
+
+  const updateMeMutation = useUpdateMeMutation();
+
+  const trimmedNickname = nickname.trim();
 
   const isValid =
-    form.nickname.trim().length >= 2 &&
-    form.nickname.trim().length <= 12 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+    trimmedNickname.length >= 2 &&
+    trimmedNickname.length <= 12;
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isValid) return;
 
-    onSave({
-      nickname: form.nickname.trim(),
-      email: form.email.trim(),
-      introduction: form.introduction,
-    });
+    if (!isValid || updateMeMutation.isPending) return;
 
-    alert("내 정보가 수정되었습니다.");
-    navigate("/mypage");
+    updateMeMutation.mutate(
+      { nickname: trimmedNickname },
+      {
+        onSuccess: () => {
+          navigate("/mypage");
+        },
+      }
+    );
   };
 
   return (
@@ -79,57 +167,56 @@ export function EditProfilePage({
 
       <form onSubmit={handleSubmit}>
         <div style={fieldStyle}>
-          <label>닉네임</label>
+          <label htmlFor="edit-nickname">닉네임</label>
           <input
+            id="edit-nickname"
             style={inputStyle}
-            value={form.nickname}
-            onChange={(e) =>
-              setForm({ ...form, nickname: e.target.value })
-            }
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
           />
-          {form.nickname.trim().length < 2 ||
-          form.nickname.trim().length > 12 ? (
+
+          {!isValid && (
             <p style={{ color: "red", fontSize: "13px" }}>
               닉네임은 2~12자로 입력해 주세요.
             </p>
-          ) : null}
+          )}
         </div>
 
         <div style={fieldStyle}>
-          <label>이메일</label>
+          <label htmlFor="edit-email">이메일</label>
           <input
+            id="edit-email"
             type="email"
-            style={inputStyle}
-            value={form.email}
-            onChange={(e) =>
-              setForm({ ...form, email: e.target.value })
-            }
+            style={{
+              ...inputStyle,
+              backgroundColor: "#f3f4f6",
+            }}
+            value={email}
+            readOnly
           />
-        </div>
-
-        <div style={fieldStyle}>
-          <label>자기소개</label>
-          <textarea
-            style={{ ...inputStyle, minHeight: "100px" }}
-            value={form.introduction}
-            onChange={(e) =>
-              setForm({ ...form, introduction: e.target.value })
-            }
-          />
+          <p style={{ color: "#666", fontSize: "12px" }}>
+            이메일은 변경할 수 없습니다.
+          </p>
         </div>
 
         <button
           type="submit"
-          disabled={!isValid}
+          disabled={!isValid || updateMeMutation.isPending}
           style={{
             ...buttonStyle,
             width: "100%",
             border: "none",
-            backgroundColor: isValid ? "#2563eb" : "#aaa",
-            cursor: isValid ? "pointer" : "not-allowed",
+            backgroundColor:
+              isValid && !updateMeMutation.isPending
+                ? "#2563eb"
+                : "#aaa",
+            cursor:
+              isValid && !updateMeMutation.isPending
+                ? "pointer"
+                : "not-allowed",
           }}
         >
-          저장하기
+          {updateMeMutation.isPending ? "저장 중..." : "저장하기"}
         </button>
 
         <div style={{ textAlign: "center", marginTop: "20px" }}>
@@ -140,6 +227,7 @@ export function EditProfilePage({
   );
 }
 
+// 기존 디자인 스타일 유지
 const containerStyle = {
   maxWidth: "450px",
   margin: "40px auto",

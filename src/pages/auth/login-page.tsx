@@ -1,11 +1,13 @@
 
+import { useLoginMutation } from "../../hooks/use-login-mutation";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+
+  const loginMutation = useLoginMutation();
 
   const isFormValid =
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
@@ -14,9 +16,12 @@ export default function LoginPage() {
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!isFormValid) return;
+    if (!isFormValid || loginMutation.isPending) return;
 
-    setMessage("로그인 API 연동은 8주차에 진행합니다.");
+    loginMutation.mutate({
+      email: email.trim(),
+      password,
+    });
   };
 
   const inputStyle = {
@@ -42,17 +47,14 @@ export default function LoginPage() {
         UMC 로그인
       </h2>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <div style={{ marginBottom: "20px" }}>
           <label htmlFor="login-email">이메일</label>
           <input
             id="login-email"
             type="email"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setMessage("");
-            }}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="이메일을 입력하세요"
             style={inputStyle}
           />
@@ -64,10 +66,7 @@ export default function LoginPage() {
             id="login-password"
             type="password"
             value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setMessage("");
-            }}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호를 입력하세요"
             style={inputStyle}
           />
@@ -75,25 +74,25 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          disabled={!isFormValid}
+          disabled={!isFormValid || loginMutation.isPending}
           style={{
             width: "100%",
             padding: "14px",
-            backgroundColor: isFormValid ? "#2563eb" : "#ccc",
+            backgroundColor:
+              isFormValid && !loginMutation.isPending
+                ? "#2563eb"
+                : "#ccc",
             color: "white",
             border: "none",
             borderRadius: "8px",
-            cursor: isFormValid ? "pointer" : "not-allowed",
+            cursor:
+              isFormValid && !loginMutation.isPending
+                ? "pointer"
+                : "not-allowed",
           }}
         >
-          로그인
+          {loginMutation.isPending ? "로그인 중..." : "로그인"}
         </button>
-
-        {message && (
-          <p style={{ color: "#2563eb", textAlign: "center" }}>
-            {message}
-          </p>
-        )}
       </form>
 
       <p style={{ textAlign: "center", marginTop: "20px" }}>

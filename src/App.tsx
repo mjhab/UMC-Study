@@ -1,60 +1,82 @@
 
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+} from "react-router-dom";
+
+import Header from "./components/layout/header";
+import ProtectedLayout from "./routes/protected-layout";
+import { useAuthStore } from "./stores/auth-store";
+
 import MovieListPage from "./pages/movies/movie-list-page";
 import MovieDetailPage from "./pages/movies/movie-detail-page";
 import SearchPage from "./pages/movies/search-page";
+
 import SignupPage from "./pages/auth/signup-page";
 import LoginPage from "./pages/auth/login-page";
+
 import {
   MyPage,
   EditProfilePage,
-  type Profile,
 } from "./pages/mypage/profile-pages";
 
-function App() {
-  // 7주차 화면 확인용 임시 회원 정보
-  const [profile, setProfile] = useState<Profile>({
-    nickname: "moviefan",
-    email: "moviefan@example.com",
-    introduction: "영화를 좋아하는 UMC 회원입니다.",
-  });
+// 로그인된 사용자는 로그인 페이지 대신 홈으로 이동
+function LoginRoute() {
+  const accessToken = useAuthStore(
+    (state) => state.accessToken
+  );
 
+  if (accessToken) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <LoginPage />;
+}
+
+function App() {
   return (
     <BrowserRouter>
+      <Header />
+
       <div style={{ padding: "20px" }}>
         <h1>UMC 영화 서비스</h1>
 
-        <nav style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+        <nav
+          style={{
+            display: "flex",
+            gap: "20px",
+            flexWrap: "wrap",
+            marginBottom: "20px",
+          }}
+        >
           <Link to="/">영화 목록</Link>
           <Link to="/search">영화 검색</Link>
           <Link to="/movies/550">영화 상세</Link>
           <Link to="/signup">회원가입</Link>
-          <Link to="/login">로그인</Link>
-          <Link to="/mypage">마이페이지</Link>
         </nav>
 
         <Routes>
+          {/* 로그인 없이 접근 가능한 페이지 */}
           <Route path="/" element={<MovieListPage />} />
           <Route path="/search" element={<SearchPage />} />
-          <Route path="/movies/:id" element={<MovieDetailPage />} />
+          <Route
+            path="/movies/:id"
+            element={<MovieDetailPage />}
+          />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<LoginRoute />} />
 
-          <Route
-            path="/mypage"
-            element={<MyPage profile={profile} />}
-          />
-
-          <Route
-            path="/mypage/edit"
-            element={
-              <EditProfilePage
-                profile={profile}
-                onSave={setProfile}
-              />
-            }
-          />
+          {/* 로그인한 사용자만 접근 가능한 페이지 */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/mypage" element={<MyPage />} />
+            <Route
+              path="/mypage/edit"
+              element={<EditProfilePage />}
+            />
+          </Route>
         </Routes>
       </div>
     </BrowserRouter>
