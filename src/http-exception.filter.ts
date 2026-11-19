@@ -6,6 +6,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { ApiException } from './exception/api.exception';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -19,12 +20,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? body
         : (body as { message?: string | string[] }).message;
 
+    // 7주차: ApiException이면 상세 에러 코드 사용
+    // 기존 예외는 6주차 COMMON 코드 유지
+    const code =
+      exception instanceof ApiException
+        ? exception.code
+        : `COMMON${status}`;
+
     response.status(status).json({
       isSuccess: false,
-      code: 'COMMON' + status,
+      code,
       message: Array.isArray(message)
         ? message[0]
-        : message ?? '요청 처리 중 오류가 발생했습니다.',
+        : (message ?? exception.message),
       result: null,
     });
   }

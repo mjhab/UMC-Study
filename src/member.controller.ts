@@ -1,4 +1,6 @@
-
+import { Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
+import { AuthGuard } from './guard/auth.guard';
 import {
   Controller,
   Get,
@@ -15,6 +17,7 @@ import { MemberService } from './member.service';
 import { CreateMemberDto } from './create-member.dto';
 import { CreateRatingDto } from './create-rating.dto';
 import { UpdateRatingDto } from './update-rating.dto';
+import { MemberUpdateRequestDto } from './member-update-request.dto';
 
 @Controller('members')
 export class MemberController {
@@ -98,4 +101,47 @@ export class MemberController {
   ) {
     await this.memberService.deleteRating(ratingId, memberId);
   }
+
+
+  // 7주차 - 내 정보 조회
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async getMyInfo(
+    @Req() request: Request & { memberId: number },
+  ) {
+    const memberId = request.memberId;
+
+    const result = await this.memberService.getMyInfo(memberId);
+
+    return {
+      isSuccess: true,
+      code: 'COMMON200',
+      message: '회원 정보를 조회했습니다.',
+      result,
+    };
+  }
+
+
+  // 7주차 - 내 정보 수정
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  async updateMyInfo(
+    @Req() request: Request & { memberId: number },
+    @Body() dto: MemberUpdateRequestDto,
+  ) {
+    const memberId = request.memberId;
+
+    const result = await this.memberService.updateMyInfo(
+      memberId,
+      dto,
+    );
+
+    return {
+      isSuccess: true,
+      code: 'COMMON200',
+      message: '회원 정보를 수정했습니다.',
+      result,
+    };
+  }
+
 }
