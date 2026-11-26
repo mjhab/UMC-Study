@@ -1,6 +1,6 @@
-
+"use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import {
   createFavorite,
   deleteFavorite,
@@ -128,7 +128,7 @@ export default function FavoriteButton({
   if (!accessToken) {
     return (
       <p>
-        즐겨찾기를 사용하려면 <Link to="/login">로그인</Link>해 주세요.
+        즐겨찾기를 사용하려면 <Link href="/login">로그인</Link>해 주세요.
       </p>
     );
   }

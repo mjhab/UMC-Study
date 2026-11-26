@@ -11,17 +11,17 @@ import Header from "./components/layout/header";
 import ProtectedLayout from "./routes/protected-layout";
 import { useAuthStore } from "./stores/auth-store";
 
-import MovieListPage from "./pages/movies/movie-list-page";
-import MovieDetailPage from "./pages/movies/movie-detail-page";
-import SearchPage from "./pages/movies/search-page";
+import MovieListPage from "./views/movies/movie-list-page";
+import MovieDetailPage from "./views/movies/movie-detail-page";
+import SearchPage from "./views/movies/search-page";
 
-import SignupPage from "./pages/auth/signup-page";
-import LoginPage from "./pages/auth/login-page";
+import SignupPage from "./views/auth/signup-page";
+import LoginPage from "./views/auth/login-page";
 
 import {
   MyPage,
   EditProfilePage,
-} from "./pages/mypage/profile-pages";
+} from "./views/mypage/profile-pages";
 
 // 로그인된 사용자는 로그인 페이지 대신 홈으로 이동
 function LoginRoute() {

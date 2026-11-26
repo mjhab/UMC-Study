@@ -1,12 +1,18 @@
 
+"use client";
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import { searchMovies } from "../../api/movies/search-movies";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export default function SearchPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const query = searchParams.get("query")?.trim() ?? "";
   const [input, setInput] = useState(query);
 
@@ -18,18 +24,27 @@ export default function SearchPage() {
 
   const movies = searchQuery.data?.results ?? [];
 
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmedInput = input.trim();
+
+    if (trimmedInput) {
+      const params = new URLSearchParams({
+        query: trimmedInput,
+      });
+
+      router.push(`/search?${params.toString()}`);
+    } else {
+      router.push("/search");
+    }
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>영화 검색</h2>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setSearchParams(
-            input.trim() ? { query: input.trim() } : {}
-          );
-        }}
-      >
+      <form onSubmit={handleSearch}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -47,21 +62,30 @@ export default function SearchPage() {
       ) : searchQuery.isSuccess && movies.length === 0 ? (
         <p>검색 결과가 없어요.</p>
       ) : (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-          gap: "20px",
-          marginTop: "20px",
-        }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fill, minmax(180px, 1fr))",
+            gap: "20px",
+            marginTop: "20px",
+          }}
+        >
           {movies.map((movie) => (
-            <Link key={movie.id} to={`/movies/${movie.id}`}>
+            <Link
+              key={movie.id}
+              href={`/movies/${movie.id}`}
+            >
               {movie.poster_path && (
                 <img
-                  src={getTmdbPosterUrl(movie.poster_path) || ""}
+                  src={
+                    getTmdbPosterUrl(movie.poster_path) || ""
+                  }
                   alt={movie.title}
                   style={{ width: "100%" }}
                 />
               )}
+
               <p>{movie.title}</p>
             </Link>
           ))}

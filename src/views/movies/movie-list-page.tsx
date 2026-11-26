@@ -1,7 +1,10 @@
 
+"use client";
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import Link from "next/link";
+
 import { getMovies } from "../../api/movies/get-movies";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
@@ -31,14 +34,15 @@ export default function MovieListPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+              gridTemplateColumns:
+                "repeat(auto-fill, minmax(180px, 1fr))",
               gap: "20px",
             }}
           >
             {movies.map((movie) => (
               <Link
                 key={movie.id}
-                to={`/movies/${movie.id}`}
+                href={`/movies/${movie.id}`}
                 style={{
                   textDecoration: "none",
                   color: "inherit",
@@ -47,15 +51,23 @@ export default function MovieListPage() {
                 <div>
                   {movie.poster_path ? (
                     <img
-                      src={getTmdbPosterUrl(movie.poster_path) || ""}
+                      src={
+                        getTmdbPosterUrl(movie.poster_path) || ""
+                      }
                       alt={movie.title}
-                      style={{ width: "100%", borderRadius: "8px" }}
+                      style={{
+                        width: "100%",
+                        borderRadius: "8px",
+                      }}
                     />
                   ) : (
                     <p>이미지 없음</p>
                   )}
+
                   <h3>{movie.title}</h3>
-                  <p>⭐ {movie.vote_average.toFixed(1)}</p>
+                  <p>
+                    ⭐ {movie.vote_average.toFixed(1)}
+                  </p>
                 </div>
               </Link>
             ))}
@@ -71,7 +83,9 @@ export default function MovieListPage() {
             }}
           >
             <button
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              onClick={() =>
+                setPage((prev) => Math.max(1, prev - 1))
+              }
               disabled={page === 1}
             >
               이전

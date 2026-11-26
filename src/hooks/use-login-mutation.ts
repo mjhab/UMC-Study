@@ -1,14 +1,16 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+
 import { login } from "../api/auth/login";
 import { useAuthStore } from "../stores/auth-store";
 
 export function useLoginMutation() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const router = useRouter();
+
   const setAccessToken = useAuthStore(
-    (state) => state.setAccessToken
+    (state) => state.setAccessToken,
   );
 
   return useMutation({
@@ -22,7 +24,7 @@ export function useLoginMutation() {
       });
 
       alert("로그인에 성공했어요.");
-      navigate("/");
+      router.replace("/");
     },
 
     onError: () => {

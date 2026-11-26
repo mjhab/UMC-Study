@@ -1,6 +1,8 @@
+"use client";
 import FavoriteButton from "../../components/movies/favorite-button";
 import { useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   useMutation,
   useQuery,
@@ -295,7 +297,7 @@ export default function MovieDetailPage() {
         {!accessToken || memberId === null ? (
           <div>
             <p>평점을 작성하려면 로그인이 필요합니다.</p>
-            <Link to="/login">로그인하기</Link>
+            <Link href="/login">로그인하기</Link>
           </div>
         ) : ratingsQuery.isPending ? (
           <p>내 평점을 불러오는 중...</p>

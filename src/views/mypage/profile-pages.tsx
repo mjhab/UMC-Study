@@ -1,12 +1,17 @@
-import FavoritesList from "../../components/movies/favorites-list";
+
+"use client";
+
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import FavoritesList from "../../components/movies/favorites-list";
 import { getMe } from "../../api/members/me";
 import { useAuthStore } from "../../stores/auth-store";
 import { useUpdateMeMutation } from "../../hooks/use-update-me-mutation";
 
-// 실제 서버의 회원 정보 조회
+// 로그인한 회원의 정보를 조회하는 Hook
 function useMeQuery() {
   const accessToken = useAuthStore(
     (state) => state.accessToken
@@ -32,7 +37,7 @@ export function MyPage() {
       <div style={containerStyle}>
         <h2>내 정보</h2>
         <p>로그인이 필요합니다.</p>
-        <Link to="/login">로그인하기</Link>
+        <Link href="/login">로그인하기</Link>
       </div>
     );
   }
@@ -73,17 +78,19 @@ export function MyPage() {
 
       <div style={fieldStyle}>
         <strong>가입일</strong>
-        <p>{new Date(profile.createdAt).toLocaleDateString("ko-KR")}</p>
+        <p>
+          {new Date(profile.createdAt).toLocaleDateString("ko-KR")}
+        </p>
       </div>
 
-      <Link to="/mypage/edit" style={buttonStyle}>
+      <Link href="/mypage/edit" style={buttonStyle}>
         내 정보 수정
       </Link>
 
       <div style={{ marginTop: "30px" }}>
-  <h3>❤️ 내 즐겨찾기 영화</h3>
-  <FavoritesList />
-</div>
+        <h3>❤️ 내 즐겨찾기 영화</h3>
+        <FavoritesList />
+      </div>
     </div>
   );
 }
@@ -97,7 +104,7 @@ export function EditProfilePage() {
       <div style={containerStyle}>
         <h2>내 정보 수정</h2>
         <p>로그인이 필요합니다.</p>
-        <Link to="/login">로그인하기</Link>
+        <Link href="/login">로그인하기</Link>
       </div>
     );
   }
@@ -131,11 +138,13 @@ interface EditProfileFormProps {
   email: string;
 }
 
+// 내 정보 수정 폼
 function EditProfileForm({
   initialNickname,
   email,
 }: EditProfileFormProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
+
   const [nickname, setNickname] = useState(initialNickname);
 
   const updateMeMutation = useUpdateMeMutation();
@@ -149,13 +158,15 @@ function EditProfileForm({
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!isValid || updateMeMutation.isPending) return;
+    if (!isValid || updateMeMutation.isPending) {
+      return;
+    }
 
     updateMeMutation.mutate(
       { nickname: trimmedNickname },
       {
         onSuccess: () => {
-          navigate("/mypage");
+          router.push("/mypage");
         },
       }
     );
@@ -168,6 +179,7 @@ function EditProfileForm({
       <form onSubmit={handleSubmit}>
         <div style={fieldStyle}>
           <label htmlFor="edit-nickname">닉네임</label>
+
           <input
             id="edit-nickname"
             style={inputStyle}
@@ -184,6 +196,7 @@ function EditProfileForm({
 
         <div style={fieldStyle}>
           <label htmlFor="edit-email">이메일</label>
+
           <input
             id="edit-email"
             type="email"
@@ -194,6 +207,7 @@ function EditProfileForm({
             value={email}
             readOnly
           />
+
           <p style={{ color: "#666", fontSize: "12px" }}>
             이메일은 변경할 수 없습니다.
           </p>
@@ -216,11 +230,18 @@ function EditProfileForm({
                 : "not-allowed",
           }}
         >
-          {updateMeMutation.isPending ? "저장 중..." : "저장하기"}
+          {updateMeMutation.isPending
+            ? "저장 중..."
+            : "저장하기"}
         </button>
 
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <Link to="/mypage">취소</Link>
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "20px",
+          }}
+        >
+          <Link href="/mypage">취소</Link>
         </div>
       </form>
     </div>
@@ -251,7 +272,6 @@ const inputStyle = {
   padding: "12px",
   marginTop: "8px",
   border: "1px solid #ddd",
-  borderRadius: "8px",
   boxSizing: "border-box" as const,
 };
 

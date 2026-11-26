@@ -1,7 +1,7 @@
-
+"use client";
 import { useLoginMutation } from "../../hooks/use-login-mutation";
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -97,7 +97,7 @@ export default function LoginPage() {
 
       <p style={{ textAlign: "center", marginTop: "20px" }}>
         아직 계정이 없으신가요?{" "}
-        <Link to="/signup">회원가입</Link>
+        <Link href="/signup">회원가입</Link>
       </p>
     </div>
   );
