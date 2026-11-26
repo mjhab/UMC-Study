@@ -1,4 +1,3 @@
-
 import {
   Body,
   Controller,
@@ -12,17 +11,24 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import type { Request } from "express";
 
 import { CreateFavoriteDto } from "../dto/create-favorite.dto";
 import { AuthGuard } from "../guard/auth.guard";
 import { FavoriteService } from "../service/favorite.service";
 
-// JWT 인증 후 memberId가 추가된 Request 타입
 type AuthenticatedRequest = Request & {
   memberId: number;
 };
 
+@ApiTags("즐겨찾기")
+@ApiBearerAuth("bearerAuth")
 @Controller("favorites")
 @UseGuards(AuthGuard)
 export class FavoriteController {
@@ -31,7 +37,51 @@ export class FavoriteController {
   ) {}
 
   // 1. 즐겨찾기 등록
-  // POST /favorites
+  @ApiOperation({
+    summary: "즐겨찾기 등록",
+    description:
+      "로그인한 회원이 영화 ID를 이용해 즐겨찾기를 등록합니다. JWT 인증이 필요합니다.",
+  })
+  @ApiResponse({
+    status: 201,
+    description: "즐겨찾기 등록 성공",
+    schema: {
+      example: {
+        isSuccess: true,
+        code: "COMMON201",
+        message: "즐겨찾기를 등록했습니다.",
+        result: {
+          favoriteId: 1,
+          movieId: 550,
+          createdAt: "2026-09-13T21:00:00.000Z",
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: "토큰이 없거나 유효하지 않음",
+    schema: {
+      example: {
+        isSuccess: false,
+        code: "AUTH401_2",
+        message: "로그인이 필요한 요청입니다.",
+        result: null,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: "이미 즐겨찾기한 영화",
+    schema: {
+      example: {
+        isSuccess: false,
+        code: "FAVORITE409_1",
+        message: "이미 이 영화를 즐겨찾기하셨습니다.",
+        result: null,
+      },
+    },
+  })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -54,7 +104,11 @@ export class FavoriteController {
   }
 
   // 2. 내 즐겨찾기 목록 조회
-  // GET /favorites
+  @ApiOperation({
+    summary: "내 즐겨찾기 목록 조회",
+    description:
+      "로그인한 회원이 등록한 즐겨찾기 영화 목록을 조회합니다. JWT 인증이 필요합니다.",
+  })
   @Get()
   @HttpCode(HttpStatus.OK)
   async getMyFavorites(
@@ -74,7 +128,11 @@ export class FavoriteController {
   }
 
   // 3. 특정 영화 즐겨찾기 여부 조회
-  // GET /favorites/:movieId
+  @ApiOperation({
+    summary: "특정 영화 즐겨찾기 여부 조회",
+    description:
+      "로그인한 회원이 특정 영화를 즐겨찾기했는지 확인합니다. JWT 인증이 필요합니다.",
+  })
   @Get(":movieId")
   @HttpCode(HttpStatus.OK)
   async getStatus(
@@ -97,9 +155,12 @@ export class FavoriteController {
   }
 
   // 4. 즐겨찾기 해제
-  // DELETE /favorites/:movieId
+  @ApiOperation({
+    summary: "즐겨찾기 해제",
+    description:
+      "로그인한 회원이 특정 영화의 즐겨찾기를 해제합니다. JWT 인증이 필요합니다.",
+  })
   @Delete(":movieId")
-  @HttpCode(HttpStatus.OK)
   async delete(
     @Req() request: AuthenticatedRequest,
     @Param("movieId", ParseIntPipe) movieId: number,
